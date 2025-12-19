@@ -29,17 +29,17 @@ interface SMTPConfig {
 }
 
 /**
- * SimpleMail - Simple email sending with pre-configured SMTP
+ * MailDrop - Simple email sending with pre-configured SMTP
  * 
  * Automatically detects SMTP settings based on email provider.
  * Supports Gmail, Outlook, Yahoo, and custom SMTP.
  */
-export class SimpleMail {
+export class MailDrop {
   private transporter: Transporter;
   private fromEmail: string;
 
   /**
-   * Create a new SimpleMail instance
+   * Create a new MailDrop instance
    * 
    * @param email - Your email address (e.g., 'user@gmail.com')
    * @param password - Your email password or app-specific password
@@ -48,13 +48,13 @@ export class SimpleMail {
    * @example
    * ```ts
    * // Gmail (requires app password)
-   * const mail = new SimpleMail('user@gmail.com', 'your-app-password');
+   * const mail = new MailDrop('user@gmail.com', 'your-app-password');
    * 
    * // Outlook
-   * const mail = new SimpleMail('user@outlook.com', 'your-password');
+   * const mail = new MailDrop('user@outlook.com', 'your-password');
    * 
    * // Custom SMTP
-   * const mail = new SimpleMail('user@example.com', 'password', {
+   * const mail = new MailDrop('user@example.com', 'password', {
    *   host: 'smtp.example.com',
    *   port: 587,
    *   secure: false
@@ -250,7 +250,7 @@ export async function drop(
     };
   }
 
-  const mail = new SimpleMail(email, password);
+  const mail = new MailDrop(email, password);
   
   return mail.send({
     ...options,
@@ -283,7 +283,7 @@ export async function quickDrop(
   password: string,
   options: Omit<SendEmailOptions, 'from'> & { from?: string }
 ): Promise<SendEmailResponse> {
-  const mail = new SimpleMail(email, password);
+  const mail = new MailDrop(email, password);
   
   return mail.send({
     ...options,
@@ -292,5 +292,5 @@ export async function quickDrop(
 }
 
 // Default export
-export default SimpleMail;
+export default MailDrop;
 

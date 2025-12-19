@@ -61,9 +61,9 @@ const { data, error } = await quickDrop(
 ### Method 3: Class-Based (Original API)
 
 ```typescript
-import { SimpleMail } from 'maildrop';
+import { MailDrop } from 'maildrop';
 
-const mail = new SimpleMail('your-email@gmail.com', 'your-app-password');
+const mail = new MailDrop('your-email@gmail.com', 'your-app-password');
 
 const { data, error } = await mail.send({
   from: 'Your Name <your-email@gmail.com>',
@@ -114,9 +114,9 @@ const { data, error } = await drop({
 3. Use the generated app password (16 characters, no spaces)
 
 ```typescript
-import { SimpleMail } from 'maildrop';
+import { MailDrop } from 'maildrop';
 
-const mail = new SimpleMail('your-email@gmail.com', 'your-16-char-app-password');
+const mail = new MailDrop('your-email@gmail.com', 'your-16-char-app-password');
 
 const { data, error } = await mail.send({
   from: 'Your Name <your-email@gmail.com>',
@@ -129,7 +129,7 @@ const { data, error } = await mail.send({
 ### Outlook / Hotmail
 
 ```typescript
-const mail = new SimpleMail('your-email@outlook.com', 'your-password');
+const mail = new MailDrop('your-email@outlook.com', 'your-password');
 
 const { data, error } = await mail.send({
   from: 'Your Name <your-email@outlook.com>',
@@ -144,7 +144,7 @@ const { data, error } = await mail.send({
 For providers not automatically detected, you can provide custom SMTP settings:
 
 ```typescript
-const mail = new SimpleMail(
+const mail = new MailDrop(
   'user@example.com',
   'password',
   {
@@ -185,7 +185,7 @@ const { data, error } = await mail.send({
 Test your SMTP connection before sending:
 
 ```typescript
-const mail = new SimpleMail('your-email@gmail.com', 'your-password');
+const mail = new MailDrop('your-email@gmail.com', 'your-password');
 
 const isValid = await mail.verify();
 if (isValid) {
@@ -262,12 +262,12 @@ const { data, error } = await quickDrop(
 
 ---
 
-### `SimpleMail` - Class-Based API
+### `MailDrop` - Class-Based API
 
 #### Constructor
 
 ```typescript
-new SimpleMail(email: string, password: string, customSMTP?: SMTPConfig)
+new MailDrop(email: string, password: string, customSMTP?: SMTPConfig)
 ```
 
 - `email` - Your email address
@@ -308,6 +308,104 @@ Send an email.
 
 Verify SMTP connection. Returns `true` if connection is valid.
 
+## Bulk Email Sending
+
+maildrop supports sending to multiple recipients in a single call. You can use arrays for `to`, `cc`, and `bcc` fields:
+
+```typescript
+const { data, error } = await drop({
+  to: ['user1@example.com', 'user2@example.com', 'user3@example.com'],
+  subject: 'Newsletter',
+  html: '<p>Hello everyone!</p>',
+});
+```
+
+### Best Practices for Bulk Sending
+
+**For small batches (< 50 emails):**
+- Use arrays directly in `to`, `cc`, or `bcc`
+- All recipients will see each other's addresses (use `bcc` for privacy)
+
+**For larger batches (> 50 emails):**
+- Use `bcc` to hide recipient addresses from each other
+- Consider sending in smaller batches with delays to avoid rate limits
+- Use a queue system for production applications
+
+```typescript
+// Good: Use BCC for privacy
+const { data, error } = await drop({
+  to: 'your-email@example.com', // Your address in 'to'
+  bcc: ['user1@example.com', 'user2@example.com', /* ... many more */],
+  subject: 'Newsletter',
+  html: '<p>Hello!</p>',
+});
+
+// Better: Send in batches for large lists
+const recipients = [/* large array */];
+const batchSize = 50;
+
+for (let i = 0; i < recipients.length; i += batchSize) {
+  const batch = recipients.slice(i, i + batchSize);
+  await drop({
+    bcc: batch,
+    subject: 'Newsletter',
+    html: '<p>Hello!</p>',
+  });
+  
+  // Small delay to avoid rate limits
+  await new Promise(resolve => setTimeout(resolve, 1000));
+}
+```
+
+**Rate Limits:**
+- **Gmail**: ~500 emails/day for free accounts, ~2000/day for Google Workspace
+- **Outlook**: ~300 emails/day for free accounts
+- **Yahoo**: ~500 emails/day
+
+For production bulk email, consider using dedicated email services (SendGrid, Mailgun, etc.) or upgrade to a business email account.
+
+## Advanced Custom SMTP Configuration
+
+For custom SMTP servers, you can provide additional configuration options:
+
+```typescript
+const mail = new MailDrop(
+  'user@example.com',
+  'password',
+  {
+    host: 'smtp.example.com',
+    port: 587,        // 587 for TLS, 465 for SSL
+    secure: false,     // true for SSL (port 465), false for TLS (port 587)
+  }
+);
+```
+
+### Common SMTP Ports
+
+- **587** - TLS (STARTTLS) - Most common, recommended
+- **465** - SSL - Legacy but still widely used
+- **25** - Unencrypted - Not recommended, often blocked
+- **2525** - Alternative TLS port (some providers)
+
+### Enterprise SMTP Providers
+
+Many enterprise email providers use custom SMTP settings:
+
+```typescript
+// Example: Custom corporate email
+const mail = new MailDrop(
+  'user@company.com',
+  'password',
+  {
+    host: 'mail.company.com',  // Your company's mail server
+    port: 587,
+    secure: false,
+  }
+);
+```
+
+**Note:** maildrop uses Nodemailer under the hood, so you can access the full Nodemailer API if needed by accessing the transporter directly (though this requires modifying the source code).
+
 ## Error Handling
 
 Always check for errors:
@@ -329,6 +427,32 @@ if (error) {
 console.log('Email sent successfully:', data.messageId);
 ```
 
+### Handling Bulk Send Errors
+
+When sending to multiple recipients, handle errors gracefully:
+
+```typescript
+const recipients = ['user1@example.com', 'user2@example.com', 'user3@example.com'];
+const results = [];
+
+for (const recipient of recipients) {
+  const { data, error } = await drop({
+    to: recipient,
+    subject: 'Hello',
+    html: '<p>Hello!</p>',
+  });
+  
+  if (error) {
+    console.error(`Failed to send to ${recipient}:`, error.message);
+    results.push({ recipient, success: false, error: error.message });
+  } else {
+    results.push({ recipient, success: true, messageId: data?.messageId });
+  }
+}
+
+console.log(`Sent ${results.filter(r => r.success).length}/${recipients.length} emails`);
+```
+
 ## Common Issues
 
 ### Gmail: "Username and Password not accepted"
@@ -348,6 +472,132 @@ console.log('Email sent successfully:', data.messageId);
 - Check your firewall settings
 - Verify the SMTP port (587 for TLS, 465 for SSL)
 - Some networks block SMTP ports
+
+### Rate limiting / Account suspension
+
+- Free email accounts have daily sending limits
+- Sending too many emails too quickly can trigger spam filters
+- If your account gets suspended, wait 24 hours before trying again
+- For production, consider using a dedicated email service
+
+## Production Best Practices
+
+### Environment Variables
+
+Always use environment variables for credentials in production:
+
+```typescript
+// ✅ Good: Using environment variables
+const { data, error } = await drop({
+  to: process.env.ADMIN_EMAIL,
+  subject: 'System Alert',
+  html: '<p>Alert message</p>',
+});
+
+// ❌ Bad: Hardcoded credentials
+const { data, error } = await quickDrop(
+  'my-email@gmail.com',
+  'my-password', // Never do this!
+  { /* ... */ }
+);
+```
+
+### Error Handling & Retries
+
+Implement retry logic for production applications:
+
+```typescript
+async function sendWithRetry(options: SendEmailOptions, maxRetries = 3) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    const { data, error } = await drop(options);
+    
+    if (!error) {
+      return { data, error: null };
+    }
+    
+    // Don't retry on authentication errors
+    if (error.code === 'EAUTH' || error.message.includes('password')) {
+      return { data: null, error };
+    }
+    
+    // Wait before retrying (exponential backoff)
+    if (attempt < maxRetries) {
+      await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+    }
+  }
+  
+  return { data: null, error: { message: 'Max retries exceeded' } };
+}
+```
+
+### Queue System for High Volume
+
+For applications sending many emails, use a queue system:
+
+```typescript
+// Example using a simple queue
+const emailQueue: Array<SendEmailOptions> = [];
+
+async function processQueue() {
+  while (emailQueue.length > 0) {
+    const email = emailQueue.shift();
+    if (email) {
+      const { error } = await drop(email);
+      if (error) {
+        console.error('Failed to send:', error);
+        // Add to retry queue or log for manual review
+      }
+      // Rate limiting: wait between sends
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+  }
+}
+```
+
+### Monitoring & Logging
+
+Log email sends for debugging and monitoring:
+
+```typescript
+async function sendWithLogging(options: SendEmailOptions) {
+  const startTime = Date.now();
+  const { data, error } = await drop(options);
+  const duration = Date.now() - startTime;
+  
+  if (error) {
+    console.error('[Email] Failed:', {
+      to: options.to,
+      error: error.message,
+      duration,
+    });
+  } else {
+    console.log('[Email] Sent:', {
+      to: options.to,
+      messageId: data?.messageId,
+      duration,
+    });
+  }
+  
+  return { data, error };
+}
+```
+
+### When to Use maildrop vs. Dedicated Services
+
+**Use maildrop when:**
+- ✅ Sending transactional emails (welcome emails, password resets, notifications)
+- ✅ Low to medium volume (< 1000 emails/day)
+- ✅ Personal projects or small applications
+- ✅ You want to use your existing email account
+
+**Consider dedicated services when:**
+- ❌ High volume (> 1000 emails/day)
+- ❌ Marketing campaigns or newsletters
+- ❌ Need advanced analytics and tracking
+- ❌ Need guaranteed delivery rates
+- ❌ Enterprise requirements
+
+Popular alternatives: SendGrid, Mailgun, AWS SES, Postmark, Resend
 
 ## License
 
