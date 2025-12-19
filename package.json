@@ -35,5 +35,9 @@
   "files": [
     "dist",
     "README.md"
-  ]
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Justinkarso/maildrop.git"
+  }
 }
